@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speak English — Refused to / Didn't want to</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #1B2A4A; --red: #C8102E; --cream: #F7F3EC; --card: #FFFDF8;
+    --border: #D5CBBA; --text: #1B2A4A; --muted: #6B7280;
+    --gold: #B8960C; --gold-light: #FDF6DC;
+    --green: #1A5C38; --green-light: #E6F4EC;
+    --radius: 10px; --radius-sm: 6px;
+  }
+  body { font-family: 'Lato', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 0 0 4rem; }
+
+  .banner { width: 100%; background: var(--navy); padding: 1.5rem 1rem 1.25rem; text-align: center; position: relative; }
+  .banner::before, .banner::after { content: ''; position: absolute; top: 0; bottom: 0; width: 8px; }
+  .banner::before { left: 0; background: var(--red); }
+  .banner::after { right: 0; background: var(--red); }
+  .banner .eyebrow { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #9EAEC8; font-weight: 500; margin-bottom: 6px; }
+  .banner h1 { font-family: 'Playfair Display', serif; font-size: 1.75rem; color: white; line-height: 1.2; margin-bottom: 6px; }
+  .banner p { font-size: 13px; color: #9EAEC8; }
+
+  .flag-strip { width: 100%; height: 6px; background: repeating-linear-gradient(90deg, var(--red) 0, var(--red) 33%, white 33%, white 66%, var(--navy) 66%, var(--navy) 100%); }
+
+  .container { width: 100%; max-width: 580px; padding: 2rem 1rem 0; }
+
+  .progress-wrap { margin-bottom: 1.25rem; }
+  .progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .progress-bg { background: var(--border); border-radius: 99px; height: 4px; }
+  .progress-fill { height: 4px; border-radius: 99px; background: var(--navy); transition: width 0.4s ease; }
+
+  .attempts-row { display: flex; align-items: center; gap: 6px; margin-bottom: 1rem; }
+  .attempts-label { font-size: 12px; color: var(--muted); }
+  .attempt-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--navy); transition: background 0.2s; }
+  .attempt-dot.used { background: var(--red); }
+
+  .voice-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--gold-light); border: 1px solid #E8D575; border-radius: var(--radius-sm); margin-bottom: 1rem; }
+  .voice-status { font-size: 12px; color: var(--gold); flex: 1; }
+  .voice-status.speaking { color: var(--green); }
+  .voice-status.error { color: var(--red); }
+  .replay-btn { padding: 4px 12px; border-radius: 99px; border: 1px solid var(--border); background: white; font-size: 12px; font-family: 'Lato', sans-serif; cursor: pointer; }
+  .replay-btn:disabled { opacity: 0.4; cursor: default; }
+
+  .ex-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem; margin-bottom: 1rem; box-shadow: 0 2px 12px rgba(27,42,74,0.06); border-top: 3px solid var(--navy); }
+  .situation { font-size: 14px; color: var(--muted); font-style: italic; margin-bottom: 0.75rem; line-height: 1.6; }
+  .prompt { font-family: 'Playfair Display', serif; font-size: 1.3rem; line-height: 1.5; color: var(--text); margin-bottom: 1.25rem; }
+  .prompt .blank { color: var(--red); font-weight: 700; }
+  .hint { font-size: 12px; color: var(--gold); margin-bottom: 1.25rem; padding: 8px 12px; background: var(--gold-light); border-radius: var(--radius-sm); border-left: 3px solid var(--gold); line-height: 1.5; }
+
+  .mic-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px; background: var(--navy); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-family: 'Lato', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .mic-btn:hover:not(:disabled) { opacity: 0.88; }
+  .mic-btn.listening { background: var(--red); animation: pulse 1.2s infinite; }
+  .mic-btn:disabled { opacity: 0.4; cursor: default; animation: none; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.75; } }
+
+  .transcript-box { margin-top: 1rem; padding: 12px 16px; background: var(--cream); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; color: var(--muted); min-height: 44px; font-style: italic; }
+  .transcript-box.has-text { color: var(--text); font-style: normal; }
+
+  .result-box { margin-top: 1rem; padding: 14px 16px; border-radius: var(--radius-sm); font-size: 14px; line-height: 1.6; display: none; }
+  .result-box.correct { background: var(--green-light); border-left: 3px solid var(--green); color: var(--green); display: block; }
+  .result-box.wrong { background: #FEF0F0; border-left: 3px solid var(--red); color: var(--red); display: block; }
+  .result-box.reveal { background: #F0F4FF; border-left: 3px solid var(--navy); color: var(--navy); display: block; }
+  .result-box .answer { font-weight: 700; margin-top: 4px; font-size: 15px; }
+
+  .nav-row { display: flex; justify-content: space-between; gap: 8px; margin-top: 1rem; }
+  .nav-btn { padding: 10px 24px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent; color: var(--text); font-size: 14px; font-family: 'Lato', sans-serif; cursor: pointer; transition: all 0.15s; }
+  .nav-btn:hover:not(:disabled) { background: white; }
+  .nav-btn:disabled { opacity: 0.35; cursor: default; }
+  .nav-btn.primary { background: var(--navy); color: white; border-color: var(--navy); }
+  .nav-btn.primary:hover { opacity: 0.88; }
+
+  .score-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 2.5rem 1.5rem; text-align: center; box-shadow: 0 2px 12px rgba(27,42,74,0.08); border-top: 3px solid var(--navy); }
+  .score-big { font-family: 'Playfair Display', serif; font-size: 4rem; color: var(--navy); line-height: 1; }
+  .score-sub { font-size: 14px; color: var(--muted); margin-top: 4px; }
+  .score-msg { font-size: 15px; color: var(--muted); margin-top: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <div class="eyebrow">Speak English</div>
+  <h1>Refused to &amp; Didn't want to</h1>
+  <p>Listen · Speak · Learn to think in English</p>
+</div>
+<div class="flag-strip"></div>
+
+<div class="container">
+  <div id="main-area"></div>
+</div>
+
+<script>
+const ELEVENLABS_API_KEY = "sk_6a8e81eb8e5551d368e6f4e5b39c3af50bf29c808cc26e68";
+const VOICE_ID = "KZte44ji3YPjXOWsbgVF";
+const MODEL_ID = "eleven_turbo_v2";
+const MAX_ATTEMPTS = 3;
+
+const EXERCISES = [
+  { situation: "John was invited to the party but he said no.", prompt: "He ___ to go.", hint: "Use 'refused' — he didn't just not want to, he actively said no.", answers: ["he refused to go", "refused to go"], display: "He refused to go." },
+  { situation: "Mary had the chance to take the exam but decided not to.", prompt: "She ___ to take the exam.", hint: "She didn't want to — no strong refusal, just a lack of desire.", answers: ["she didn't want to take the exam", "didn't want to take the exam", "she did not want to take the exam"], display: "She didn't want to take the exam." },
+  { situation: "The kids were asked to eat their vegetables. They said no and pushed the plate away.", prompt: "They ___ to eat their vegetables.", hint: "They actively said no — use 'refused'.", answers: ["they refused to eat their vegetables", "refused to eat their vegetables"], display: "They refused to eat their vegetables." },
+  { situation: "He could have gone to the doctor, but he just didn't feel like it.", prompt: "He ___ to go to the doctor.", hint: "No strong refusal here — just no desire to go.", answers: ["he didn't want to go to the doctor", "didn't want to go to the doctor", "he did not want to go to the doctor"], display: "He didn't want to go to the doctor." },
+  { situation: "They were given the money but they said they wouldn't take it.", prompt: "They ___ to take the money.", hint: "They actively rejected it — use 'refused'.", answers: ["they refused to take the money", "refused to take the money"], display: "They refused to take the money." }
+];
+
+let current = 0;
+let results = Array(EXERCISES.length).fill(null);
+let attemptsLeft = MAX_ATTEMPTS;
+let isListening = false;
+let isSpeaking = false;
+let currentAudio = null;
+let recognition = null;
+
+// ── Tones ──
+function playTone(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    if(type === 'correct') {
+      osc.frequency.setValueAtTime(523, ctx.currentTime);
+      osc.frequency.setValueAtTime(659, ctx.currentTime + 0.12);
+      osc.frequency.setValueAtTime(784, ctx.currentTime + 0.24);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.5);
+    } else {
+      osc.frequency.setValueAtTime(300, ctx.currentTime);
+      osc.frequency.setValueAtTime(220, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.35);
+    }
+  } catch(e) {}
+}
+
+// ── TTS ──
+function setVoiceStatus(text, cls) {
+  const el = document.getElementById('voice-status');
+  if(el) { el.textContent = text; el.className = 'voice-status' + (cls ? ' ' + cls : ''); }
+}
+function setReplayDisabled(val) {
+  const btn = document.getElementById('replay-btn');
+  if(btn) btn.disabled = val;
+}
+async function speakSituation(ex) {
+  if(isSpeaking && currentAudio) { currentAudio.pause(); currentAudio = null; isSpeaking = false; }
+  isSpeaking = true; setReplayDisabled(true);
+  setVoiceStatus('Reading situation...', 'speaking');
+  try {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
+      method: 'POST',
+      headers: { 'xi-api-key': ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: ex.situation + ' ' + ex.prompt.replace('___', 'blank'), model_id: MODEL_ID, voice_settings: { stability: 0.5, similarity_boost: 0.75, speed: 0.9 } })
+    });
+    if(!res.ok) throw new Error(res.status);
+    const url = URL.createObjectURL(await res.blob());
+    await new Promise((resolve, reject) => {
+      const audio = new Audio(url);
+      currentAudio = audio;
+      audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
+      audio.onerror = () => { URL.revokeObjectURL(url); reject(); };
+      audio.play();
+    });
+    setVoiceStatus('Press the mic and say your answer.', '');
+  } catch(e) {
+    setVoiceStatus('Voice error. Try Replay.', 'error');
+  }
+  isSpeaking = false; setReplayDisabled(false);
+}
+
+// ── Speech recognition ──
+function normalize(str) {
+  return str.toLowerCase().replace(/[.,!?']/g, '').replace(/\s+/g, ' ').trim();
+}
+function checkAnswer(spoken) {
+  const norm = normalize(spoken);
+  return EXERCISES[current].answers.some(a => norm.includes(normalize(a)));
+}
+
+function startListening() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) { alert('Please use Google Chrome.'); return; }
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+
+  const micBtn = document.getElementById('mic-btn');
+  const box = document.getElementById('transcript-box');
+
+  recognition.onstart = () => {
+    isListening = true;
+    if(micBtn) { micBtn.innerHTML = '⏹ Stop'; micBtn.classList.add('listening'); }
+    if(box) { box.textContent = 'Listening...'; box.className = 'transcript-box'; }
+  };
+  recognition.onresult = (e) => {
+    let final = '', interim = '';
+    for(let i = e.resultIndex; i < e.results.length; i++) {
+      if(e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    if(box) { box.textContent = final || interim; box.className = 'transcript-box has-text'; }
+    if(final) { recognition.stop(); evaluateAnswer(final); }
+  };
+  recognition.onerror = (e) => {
+    isListening = false;
+    if(micBtn) { micBtn.innerHTML = '🎤 Try again'; micBtn.classList.remove('listening'); }
+    if(box) box.textContent = 'Could not hear you. Try again.';
+  };
+  recognition.onend = () => {
+    isListening = false;
+    if(micBtn && !results[current]) { micBtn.innerHTML = '🎤 Try again'; micBtn.classList.remove('listening'); }
+  };
+  recognition.start();
+}
+
+function stopListening() { if(recognition) recognition.stop(); }
+
+function updateDots() {
+  const el = document.getElementById('attempt-dots');
+  if(!el) return;
+  el.innerHTML = Array.from({length: MAX_ATTEMPTS}, (_, i) =>
+    `<div class="attempt-dot ${i >= attemptsLeft ? 'used' : ''}"></div>`
+  ).join('');
+}
+
+function evaluateAnswer(spoken) {
+  const correct = checkAnswer(spoken);
+  const ex = EXERCISES[current];
+  const resultBox = document.getElementById('result-box');
+  const micBtn = document.getElementById('mic-btn');
+  const navRow = document.getElementById('nav-row');
+
+  if(correct) {
+    playTone('correct');
+    results[current] = { spoken, correct: true };
+    if(resultBox) { resultBox.className = 'result-box correct'; resultBox.innerHTML = `✓ Well done!<div class="answer">${ex.display}</div>`; }
+    if(micBtn) micBtn.disabled = true;
+    if(navRow) navRow.style.display = 'flex';
+  } else {
+    playTone('wrong');
+    attemptsLeft--;
+    updateDots();
+    if(attemptsLeft <= 0) {
+      results[current] = { spoken, correct: false };
+      if(resultBox) { resultBox.className = 'result-box reveal'; resultBox.innerHTML = `All attempts used.<div class="answer">Correct: ${ex.display}</div>`; }
+      if(micBtn) micBtn.disabled = true;
+      if(navRow) navRow.style.display = 'flex';
+    } else {
+      if(resultBox) { resultBox.className = 'result-box wrong'; resultBox.innerHTML = `✗ Not quite: "<em>${spoken}</em>"<br>${attemptsLeft} attempt${attemptsLeft > 1 ? 's' : ''} left.`; }
+      if(micBtn) { micBtn.innerHTML = '🎤 Try again'; micBtn.classList.remove('listening'); micBtn.disabled = false; }
+    }
+  }
+}
+
+function renderExercise(autoSpeak) {
+  const area = document.getElementById('main-area');
+  if(results.every(r => r !== null) && current >= EXERCISES.length) {
+    const correct = results.filter(r => r && r.correct).length;
+    const pct = Math.round(correct / EXERCISES.length * 100);
+    area.innerHTML = `
+      <div class="score-card">
+        <div class="score-big">${correct}/${EXERCISES.length}</div>
+        <div class="score-sub">${pct}% correct</div>
+        <div class="score-msg">${pct >= 80 ? 'Excellent! You\'re thinking in English.' : pct >= 60 ? 'Good effort! Keep practicing.' : 'Keep going — every attempt helps.'}</div>
+        <div style="margin-top:1.5rem;"><button class="nav-btn primary" onclick="resetAll()">Try again</button></div>
+      </div>`;
+    return;
+  }
+
+  const ex = EXERCISES[current];
+  const total = EXERCISES.length;
+  const pct = (current / total * 100).toFixed(0);
+  const answered = results[current] !== null;
+
+  const dotsHTML = Array.from({length: MAX_ATTEMPTS}, (_, i) =>
+    `<div class="attempt-dot ${answered || i >= attemptsLeft ? 'used' : ''}"></div>`
+  ).join('');
+
+  let resultHTML = '';
+  if(answered) {
+    const r = results[current];
+    resultHTML = r.correct
+      ? `<div class="result-box correct">✓ Well done!<div class="answer">${ex.display}</div></div>`
+      : `<div class="result-box reveal">All attempts used.<div class="answer">Correct: ${ex.display}</div></div>`;
+  }
+
+  area.innerHTML = `
+    <div class="progress-wrap">
+      <div class="progress-meta"><span>Exercise ${current+1} of ${total}</span><span>${pct}% complete</span></div>
+      <div class="progress-bg"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="attempts-row">
+      <span class="attempts-label">Attempts:</span>
+      <div id="attempt-dots" style="display:flex;gap:6px;">${dotsHTML}</div>
+    </div>
+    <div class="voice-bar">
+      <span>&#128266;</span>
+      <span id="voice-status" class="voice-status">Loading voice...</span>
+      <button class="replay-btn" id="replay-btn" onclick="speakSituation(EXERCISES[current])">&#9654; Replay</button>
+    </div>
+    <div class="ex-card">
+      <p class="situation">${ex.situation}</p>
+      <p class="prompt">${ex.prompt.replace('___', '<span class="blank">___</span>')}</p>
+      <p class="hint">&#128161; ${ex.hint}</p>
+      <button class="mic-btn" id="mic-btn" onclick="isListening ? stopListening() : startListening()" ${answered?'disabled':''}>
+        🎤 ${answered ? 'Answered' : 'Press to speak'}
+      </button>
+      <div class="transcript-box ${answered?'has-text':''}" id="transcript-box">
+        ${answered ? results[current].spoken : 'Your answer will appear here...'}
+      </div>
+      ${resultHTML}
+      <div class="result-box" id="result-box"></div>
+    </div>
+    <div class="nav-row" id="nav-row" style="${answered?'display:flex':'display:none'}">
+      <button class="nav-btn" onclick="navigate(-1)" ${current===0?'disabled':''}>← Previous</button>
+      <button class="nav-btn primary" onclick="navigate(1)">${current===total-1?'See results':'Next →'}</button>
+    </div>`;
+
+  if(autoSpeak && !answered) setTimeout(() => speakSituation(ex), 400);
+}
+
+function navigate(dir) {
+  if(currentAudio) { currentAudio.pause(); currentAudio = null; }
+  const next = current + dir;
+  if(next < 0) return;
+  if(next >= EXERCISES.length) { current = EXERCISES.length; renderExercise(false); return; }
+  current = next;
+  attemptsLeft = MAX_ATTEMPTS;
+  renderExercise(true);
+}
+
+function resetAll() {
+  current = 0; results = Array(EXERCISES.length).fill(null); attemptsLeft = MAX_ATTEMPTS;
+  renderExercise(true);
+}
+
+renderExercise(true);
+</script>
+</body>
+</html>
