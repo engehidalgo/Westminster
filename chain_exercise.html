@@ -427,12 +427,8 @@ function renderExercise(autoSpeak) {
       <button class="nav-btn primary" onclick="navigate(1)">${current===total-1?'See results':'Next →'}</button>
     </div>`;
 
-  if(autoSpeak) {
-    setTimeout(() => speakStep(0), 600);
-  } else {
-    setReplayDisabled(false);
-    setVoiceStatus('Press Replay to hear the phrase.', '');
-  }
+  setReplayDisabled(false);
+  setVoiceStatus('Press Replay to hear the phrase.', '');
 }
 
 function navigate(dir) {
