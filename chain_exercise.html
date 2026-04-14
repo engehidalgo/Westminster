@@ -260,6 +260,25 @@ async function speakStep(stepIndex) {
   setReplayDisabled(false);
 }
 
+async function speakInstruction(stepIndex) {
+  const ex = EXERCISES[current];
+  const step = ex.steps[stepIndex];
+  if(isSpeaking && currentAudio) { currentAudio.pause(); currentAudio = null; isSpeaking = false; }
+  isSpeaking = true;
+  const btn = document.getElementById('step-replay-' + stepIndex);
+  if(btn) btn.disabled = true;
+  setVoiceStatus('Reading instruction...', 'speaking');
+  try {
+    const url = await speakText(step.instruction);
+    await playUrl(url);
+    setVoiceStatus('Press the mic and say your answer.', '');
+  } catch(e) {
+    setVoiceStatus('Voice error.', 'error');
+  }
+  isSpeaking = false;
+  if(btn) btn.disabled = false;
+}
+
 function normalize(str) {
   return str.toLowerCase().replace(/[.,!?']/g, '').replace(/\s+/g, ' ').trim();
 }
@@ -409,7 +428,10 @@ function renderExercise(autoSpeak) {
           <div class="step-num ${numCls}" id="step-num-${i}">${numContent}</div>
           <span class="step-label">${step.speak ? 'Listen' : 'Your turn'}</span>
         </div>
-        <p class="step-instruction">${step.instruction}</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <p class="step-instruction" style="margin:0">${step.instruction}</p>
+          ${!step.speak ? `<button class="replay-btn" id="step-replay-${i}" onclick="speakInstruction(${i})" style="flex-shrink:0;margin-left:8px;">&#9654;</button>` : ''}
+        </div>
         ${modelHTML}
         ${!step.speak ? `
           <div class="step-transcript ${isDone ? 'has-text' : ''}" id="step-transcript-${i}">${isDone ? result.spoken : ''}</div>
