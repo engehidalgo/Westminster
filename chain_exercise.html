@@ -43,22 +43,25 @@
 
   .context-box { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 1.25rem; padding: 10px 14px; background: var(--cream); border-radius: var(--radius-sm); border-left: 3px solid var(--border); line-height: 1.6; }
 
-  .step { margin-bottom: 1.25rem; padding: 1rem 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border); background: white; transition: all 0.3s; }
+  .step { margin-bottom: 1rem; padding: 1rem 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border); background: white; transition: all 0.3s; }
   .step.active { border-color: var(--navy); background: #F0F4FF; }
   .step.done-correct { border-color: var(--green); background: var(--green-light); }
   .step.done-wrong { border-color: var(--navy); background: #F0F4FF; }
-  .step.skipped { opacity: 0.5; }
+  .step.locked { opacity: 0.45; pointer-events: none; }
 
-  .step-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .step-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--navy); color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .step-num.correct { background: var(--green); }
-  .step-num.wrong { background: var(--navy); }
   .step-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 500; }
 
-  .step-instruction { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
-  .step-model { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--navy); margin-bottom: 10px; line-height: 1.4; }
-  .step-model.hidden { filter: blur(4px); user-select: none; cursor: pointer; transition: filter 0.3s; }
-  .step-model.hidden:hover { filter: blur(2px); }
+  .step-instruction { font-size: 13px; color: var(--muted); margin-bottom: 8px; line-height: 1.5; }
+
+  /* Model answer — hidden by default for YOUR TURN steps */
+  .model-wrap { margin-bottom: 10px; }
+  .model-text { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--navy); line-height: 1.4; }
+  .model-hidden { display: none; }
+  .reveal-btn { font-size: 11px; color: var(--gold); background: none; border: none; cursor: pointer; padding: 0; font-family: 'Lato', sans-serif; text-decoration: underline; }
+  .reveal-btn:hover { color: var(--navy); }
 
   .step-transcript { font-size: 13px; color: var(--muted); font-style: italic; margin-top: 6px; min-height: 20px; }
   .step-transcript.has-text { color: var(--text); font-style: normal; }
@@ -85,7 +88,6 @@
   .score-sub { font-size: 14px; color: var(--muted); margin-top: 4px; }
   .score-msg { font-size: 15px; color: var(--muted); margin-top: 1rem; }
 
-  /* Confetti */
   .confetti-piece { position: fixed; width: 10px; height: 10px; border-radius: 2px; animation: confetti-fall 1.2s ease-in forwards; pointer-events: none; z-index: 9999; }
   @keyframes confetti-fall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
 </style>
@@ -113,32 +115,32 @@ const EXERCISES = [
     context: "Someone is surprised that a person didn't pay.",
     steps: [
       { instruction: "Listen — Lady Chatterley says:", model: "How come he didn't pay?", speak: true, target: null },
-      { instruction: "Now say the same idea — he had no desire to pay:", model: "How come he didn't want to pay?", speak: false, target: ["how come he didn't want to pay", "how come he did not want to pay"] },
-      { instruction: "Now say the same idea — he actively refused:", model: "How come he refused to pay?", speak: false, target: ["how come he refused to pay"] }
+      { instruction: "Say the same idea — he had no desire to pay:", model: "How come he didn't want to pay?", speak: false, target: ["how come he didn't want to pay", "how come he did not want to pay"] },
+      { instruction: "Say the same idea — he actively refused to pay:", model: "How come he refused to pay?", speak: false, target: ["how come he refused to pay"] }
     ]
   },
   {
     context: "You're sharing a surprising piece of news about an exam.",
     steps: [
       { instruction: "Listen — Lady Chatterley says:", model: "By the way, she didn't take the exam.", speak: true, target: null },
-      { instruction: "Now say the same idea — she had no desire to take it:", model: "By the way, she didn't want to take the exam.", speak: false, target: ["by the way she didn't want to take the exam", "by the way she did not want to take the exam", "she didn't want to take the exam"] },
-      { instruction: "Now say the same idea — she actively refused:", model: "By the way, she refused to take the exam.", speak: false, target: ["by the way she refused to take the exam", "she refused to take the exam"] }
+      { instruction: "Say the same idea — she had no desire to take it:", model: "By the way, she didn't want to take the exam.", speak: false, target: ["by the way she didn't want to take the exam", "by the way she did not want to take the exam", "she didn't want to take the exam"] },
+      { instruction: "Say the same idea — she actively refused:", model: "By the way, she refused to take the exam.", speak: false, target: ["by the way she refused to take the exam", "she refused to take the exam"] }
     ]
   },
   {
     context: "You're telling a friend something surprising about money.",
     steps: [
       { instruction: "Listen — Lady Chatterley says:", model: "Don't tell me they didn't give you the money!", speak: true, target: null },
-      { instruction: "Now say the same idea — they had no desire to give it:", model: "Don't tell me they didn't want to give you the money!", speak: false, target: ["don't tell me they didn't want to give you the money", "they didn't want to give you the money"] },
-      { instruction: "Now say the same idea — they actively refused:", model: "Don't tell me they refused to give you the money!", speak: false, target: ["don't tell me they refused to give you the money", "they refused to give you the money"] }
+      { instruction: "Say the same idea — they had no desire to give it:", model: "Don't tell me they didn't want to give you the money!", speak: false, target: ["don't tell me they didn't want to give you the money", "they didn't want to give you the money"] },
+      { instruction: "Say the same idea — they actively refused:", model: "Don't tell me they refused to give you the money!", speak: false, target: ["don't tell me they refused to give you the money", "they refused to give you the money"] }
     ]
   },
   {
     context: "You're explaining why something didn't get done.",
     steps: [
       { instruction: "Listen — Lady Chatterley says:", model: "That's why we didn't do it.", speak: true, target: null },
-      { instruction: "Now say the same idea — you had no desire to do it:", model: "That's why we didn't want to do it.", speak: false, target: ["that's why we didn't want to do it", "we didn't want to do it", "that is why we didn't want to do it"] },
-      { instruction: "Now say the same idea — you actively refused:", model: "That's why we refused to do it.", speak: false, target: ["that's why we refused to do it", "we refused to do it"] }
+      { instruction: "Say the same idea — you had no desire to do it:", model: "That's why we didn't want to do it.", speak: false, target: ["that's why we didn't want to do it", "we didn't want to do it", "that is why we didn't want to do it"] },
+      { instruction: "Say the same idea — you actively refused:", model: "That's why we refused to do it.", speak: false, target: ["that's why we refused to do it", "we refused to do it"] }
     ]
   }
 ];
@@ -152,7 +154,6 @@ let isSpeaking = false;
 let currentAudio = null;
 let recognition = null;
 
-// ── Confetti ──
 function launchConfetti() {
   const colors = ['#C8102E','#1B2A4A','#B8960C','#1A5C38','#ffffff'];
   for(let i = 0; i < 60; i++) {
@@ -170,7 +171,6 @@ function launchConfetti() {
   }
 }
 
-// ── Tones ──
 function playTone(type) {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -194,7 +194,6 @@ function playTone(type) {
   } catch(e) {}
 }
 
-// ── TTS ──
 function setVoiceStatus(text, cls) {
   const el = document.getElementById('voice-status');
   if(el) { el.textContent = text; el.className = 'voice-status' + (cls ? ' ' + cls : ''); }
@@ -208,15 +207,20 @@ async function speakText(text) {
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
     method: 'POST',
     headers: { 'xi-api-key': ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      text,
-      model_id: MODEL_ID,
-      voice_settings: { stability: 0.5, similarity_boost: 0.75, speed: 0.9 }
-    })
+    body: JSON.stringify({ text, model_id: MODEL_ID, voice_settings: { stability: 0.5, similarity_boost: 0.75, speed: 0.9 } })
   });
   if(!res.ok) throw new Error(res.status);
-  const url = URL.createObjectURL(await res.blob());
-  return url;
+  return URL.createObjectURL(await res.blob());
+}
+
+async function playUrl(url) {
+  return new Promise((resolve, reject) => {
+    const audio = new Audio(url);
+    currentAudio = audio;
+    audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
+    audio.onerror = () => { URL.revokeObjectURL(url); reject(); };
+    audio.play();
+  });
 }
 
 async function speakStep(stepIndex) {
@@ -226,18 +230,24 @@ async function speakStep(stepIndex) {
   if(isSpeaking && currentAudio) { currentAudio.pause(); currentAudio = null; isSpeaking = false; }
   isSpeaking = true;
   setReplayDisabled(true);
-  setVoiceStatus('Lady Chatterley is speaking...', 'speaking');
+
   try {
-    const url = await speakText(step.model);
-    await new Promise((resolve, reject) => {
-      const audio = new Audio(url);
-      currentAudio = audio;
-      audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
-      audio.onerror = () => { URL.revokeObjectURL(url); reject(); };
-      audio.play();
-    });
-    setVoiceStatus('Now it\'s your turn. Press the mic.', '');
-    // auto advance to step 1
+    // 1. Speak context
+    setVoiceStatus('Setting the scene...', 'speaking');
+    const ctxUrl = await speakText(ex.context);
+    await playUrl(ctxUrl);
+
+    // 2. Short pause
+    await new Promise(r => setTimeout(r, 600));
+
+    // 3. Speak the model phrase
+    setVoiceStatus('Lady Chatterley is speaking...', 'speaking');
+    const phraseUrl = await speakText(step.model);
+    await playUrl(phraseUrl);
+
+    setVoiceStatus("Now it's your turn. Press the mic.", '');
+
+    // Auto-advance to step 1
     if(stepIndex === 0) {
       currentStep = 1;
       renderExercise(false);
@@ -245,17 +255,24 @@ async function speakStep(stepIndex) {
   } catch(e) {
     setVoiceStatus('Voice error. Try Replay.', 'error');
   }
+
   isSpeaking = false;
   setReplayDisabled(false);
 }
 
-// ── Speech recognition ──
 function normalize(str) {
   return str.toLowerCase().replace(/[.,!?']/g, '').replace(/\s+/g, ' ').trim();
 }
 function checkAnswer(spoken, targets) {
   const norm = normalize(spoken);
   return targets.some(t => norm.includes(normalize(t)));
+}
+
+function revealModel(stepIndex) {
+  const el = document.getElementById('model-hidden-' + stepIndex);
+  const btn = document.getElementById('reveal-btn-' + stepIndex);
+  if(el) el.style.display = 'block';
+  if(btn) btn.style.display = 'none';
 }
 
 function startListening() {
@@ -274,7 +291,6 @@ function startListening() {
     if(micBtn) { micBtn.innerHTML = '⏹ Stop'; micBtn.classList.add('listening'); micBtn.classList.remove('correct'); }
     if(transcriptEl) { transcriptEl.textContent = 'Listening...'; transcriptEl.className = 'step-transcript'; }
   };
-
   recognition.onresult = (e) => {
     let final = '', interim = '';
     for(let i = e.resultIndex; i < e.results.length; i++) {
@@ -284,21 +300,15 @@ function startListening() {
     if(transcriptEl) { transcriptEl.textContent = final || interim; transcriptEl.className = 'step-transcript has-text'; }
     if(final) { recognition.stop(); evaluateStep(final); }
   };
-
   recognition.onerror = () => {
     isListening = false;
     if(micBtn) { micBtn.innerHTML = '🎤 Try again'; micBtn.classList.remove('listening'); }
     if(transcriptEl) transcriptEl.textContent = 'Could not hear you. Try again.';
   };
-
   recognition.onend = () => {
     isListening = false;
-    if(micBtn && currentStep < EXERCISES[current].steps.length) {
-      micBtn.innerHTML = '🎤 Try again';
-      micBtn.classList.remove('listening');
-    }
+    if(micBtn && exerciseResults[current] === null) { micBtn.innerHTML = '🎤 Try again'; micBtn.classList.remove('listening'); }
   };
-
   recognition.start();
 }
 
@@ -308,13 +318,15 @@ function evaluateStep(spoken) {
   const ex = EXERCISES[current];
   const step = ex.steps[currentStep];
   const correct = checkAnswer(spoken, step.target);
-
   stepResults[currentStep] = { spoken, correct };
 
   const stepEl = document.getElementById('step-' + currentStep);
   const resultEl = document.getElementById('step-result-' + currentStep);
   const numEl = document.getElementById('step-num-' + currentStep);
   const micBtn = document.getElementById('mic-btn');
+
+  // Always reveal model after attempt
+  revealModel(currentStep);
 
   if(correct) {
     playTone('correct');
@@ -323,41 +335,27 @@ function evaluateStep(spoken) {
     if(resultEl) { resultEl.textContent = '✓ Correct!'; resultEl.className = 'step-result correct'; }
     if(micBtn) { micBtn.classList.remove('listening'); micBtn.classList.add('correct'); micBtn.innerHTML = '✓ Correct!'; }
 
-    // reveal model answer
-    const modelEl = document.getElementById('step-model-' + currentStep);
-    if(modelEl) modelEl.classList.remove('hidden');
-
-    // advance to next step or finish
     const nextStep = currentStep + 1;
     if(nextStep < ex.steps.length) {
-      setTimeout(() => {
-        currentStep = nextStep;
-        renderExercise(false);
-      }, 800);
+      setTimeout(() => { currentStep = nextStep; renderExercise(false); }, 900);
     } else {
-      // all steps done
       launchConfetti();
       exerciseResults[current] = stepResults.filter(r => r && r.correct).length;
       const navRow = document.getElementById('nav-row');
       if(navRow) navRow.style.display = 'flex';
-      setTimeout(() => {
-        if(micBtn) { micBtn.disabled = true; }
-      }, 100);
+      setTimeout(() => { if(micBtn) micBtn.disabled = true; }, 100);
     }
   } else {
     playTone('wrong');
-    if(resultEl) { resultEl.textContent = '✗ Try again — ' + step.model; resultEl.className = 'step-result wrong'; }
-    // reveal model after wrong attempt
-    const modelEl = document.getElementById('step-model-' + currentStep);
-    if(modelEl) modelEl.classList.remove('hidden');
+    if(resultEl) { resultEl.textContent = '✗ Not quite. Try again.'; resultEl.className = 'step-result wrong'; }
     if(micBtn) { micBtn.classList.remove('listening'); micBtn.innerHTML = '🎤 Try again'; }
+    stepResults[currentStep] = null; // allow retry
   }
 }
 
 function renderExercise(autoSpeak) {
   const area = document.getElementById('main-area');
 
-  // Score screen
   if(current >= EXERCISES.length) {
     const total = EXERCISES.reduce((a, ex) => a + ex.steps.filter(s => !s.speak).length, 0);
     const correct = exerciseResults.reduce((a, r) => a + (r || 0), 0);
@@ -381,10 +379,29 @@ function renderExercise(autoSpeak) {
     const isActive = i === currentStep && !allDone;
     const result = stepResults[i];
     const isDone = result !== null && result !== undefined;
-    const cls = step.speak ? '' : isActive ? 'active' : isDone ? (result.correct ? 'done-correct' : 'done-wrong') : 'skipped';
-    const numCls = isDone && !step.speak ? (result.correct ? 'correct' : 'wrong') : '';
-    const numContent = isDone && !step.speak ? (result.correct ? '✓' : i+1) : i+1;
-    const modelHidden = !step.speak && !isDone && !isActive ? 'hidden' : '';
+    const isLocked = !step.speak && i > currentStep && !allDone;
+    let cls = '';
+    if(step.speak) cls = '';
+    else if(isLocked) cls = 'locked';
+    else if(isActive) cls = 'active';
+    else if(isDone) cls = result.correct ? 'done-correct' : 'done-wrong';
+
+    const numCls = isDone && !step.speak ? (result.correct ? 'correct' : '') : '';
+    const numContent = isDone && !step.speak && result.correct ? '✓' : i + 1;
+
+    // For listen steps: always show model
+    // For your-turn steps: hide model, show reveal button
+    let modelHTML = '';
+    if(step.speak) {
+      modelHTML = `<div class="model-wrap"><p class="model-text">${step.model}</p></div>`;
+    } else {
+      const revealed = isDone;
+      modelHTML = `
+        <div class="model-wrap">
+          <button class="reveal-btn" id="reveal-btn-${i}" onclick="revealModel(${i})" style="${revealed ? 'display:none' : ''}">Show answer</button>
+          <p class="model-text model-hidden" id="model-hidden-${i}" style="${revealed ? 'display:block' : 'display:none'}">${step.model}</p>
+        </div>`;
+    }
 
     return `
       <div class="step ${cls}" id="step-${i}">
@@ -393,10 +410,10 @@ function renderExercise(autoSpeak) {
           <span class="step-label">${step.speak ? 'Listen' : 'Your turn'}</span>
         </div>
         <p class="step-instruction">${step.instruction}</p>
-        <p class="step-model ${modelHidden}" id="step-model-${i}" onclick="this.classList.remove('hidden')">${step.model}</p>
+        ${modelHTML}
         ${!step.speak ? `
           <div class="step-transcript ${isDone ? 'has-text' : ''}" id="step-transcript-${i}">${isDone ? result.spoken : ''}</div>
-          <div class="step-result ${isDone ? (result.correct ? 'correct' : 'wrong') : ''}" id="step-result-${i}">${isDone ? (result.correct ? '✓ Correct!' : '✗ ' + step.model) : ''}</div>
+          <div class="step-result ${isDone ? (result.correct ? 'correct' : 'wrong') : ''}" id="step-result-${i}">${isDone ? (result.correct ? '✓ Correct!' : '✗ Not quite.') : ''}</div>
         ` : ''}
       </div>`;
   }).join('');
@@ -410,8 +427,8 @@ function renderExercise(autoSpeak) {
     </div>
     <div class="voice-bar">
       <span>&#128266;</span>
-      <span id="voice-status" class="voice-status">Loading voice...</span>
-      <button class="replay-btn" id="replay-btn" onclick="speakStep(0)" disabled>&#9654; Replay</button>
+      <span id="voice-status" class="voice-status">Press Replay to begin.</span>
+      <button class="replay-btn" id="replay-btn" onclick="speakStep(0)">&#9654; Replay</button>
     </div>
     <div class="chain-card">
       <div class="context-box">&#128161; ${ex.context}</div>
@@ -420,15 +437,12 @@ function renderExercise(autoSpeak) {
         <button class="mic-btn" id="mic-btn" onclick="isListening ? stopListening() : startListening()">
           🎤 Press to speak
         </button>` : ''}
-      ${allDone ? `<button class="mic-btn" disabled style="margin-top:1rem;">✓ Completed</button>` : ''}
+      ${allDone ? `<button class="mic-btn correct" disabled style="margin-top:1rem;">✓ Exercise complete</button>` : ''}
     </div>
     <div class="nav-row" id="nav-row" style="${allDone ? 'display:flex' : 'display:none'}">
       <button class="nav-btn" onclick="navigate(-1)" ${current===0?'disabled':''}>← Previous</button>
       <button class="nav-btn primary" onclick="navigate(1)">${current===total-1?'See results':'Next →'}</button>
     </div>`;
-
-  setReplayDisabled(false);
-  setVoiceStatus('Press Replay to hear the phrase.', '');
 }
 
 function navigate(dir) {
@@ -439,16 +453,16 @@ function navigate(dir) {
   current = next;
   currentStep = 0;
   stepResults = [];
-  renderExercise(true);
+  renderExercise(false);
 }
 
 function resetAll() {
   current = 0; currentStep = 0; stepResults = [];
   exerciseResults = Array(EXERCISES.length).fill(null);
-  renderExercise(true);
+  renderExercise(false);
 }
 
-renderExercise(true);
+renderExercise(false);
 </script>
 </body>
 </html>
